@@ -1,0 +1,13 @@
+### GET all notes
+GET http://localhost:3003/api/blogs
+
+### POST new note
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "Making a hat",
+  "author": "The Mad Hatter",
+  "url": "hats.com",
+  "likes": 10
+}
