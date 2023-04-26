@@ -4,7 +4,6 @@ const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
 const helper = require('./test_helper')
-const util = require("util");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
 
@@ -70,7 +69,7 @@ describe('adding a blog to the database', () => {
 
     const blogsAfter = await helper.getBlogsInDB()
 
-    const blogContents = blogsAfter.map(({id, ...blogNoId}) => blogNoId)
+    const blogContents = blogsAfter.map(({id, user, ...blogNoId}) => blogNoId)
 
     expect(blogsAfter).toHaveLength(blogsBefore.length + 1)
     expect(blogContents).toContainEqual(blogToAdd)
@@ -110,8 +109,7 @@ describe('adding a blog to the database', () => {
       .send(blogToAdd)
       .expect(201)
 
-    const blogsAfter = await helper.getBlogsInDB()
-    const addedBlog = blogsAfter.find(({likes, id, ...setProperties}) => util.isDeepStrictEqual(setProperties, blogToAdd))
+    const addedBlog = await Blog.findOne({title: blogToAdd.title, author: blogToAdd.author, url: blogToAdd.url})
 
     expect(addedBlog.likes).toBe(0)
 
