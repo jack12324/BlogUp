@@ -11,3 +11,16 @@ Content-Type: application/json
   "url": "hats.com",
   "likes": 10
 }
+
+### POST a new user
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+  "username": "root",
+  "name": "superuser",
+  "password": "a;slkfiejlskdjfl"
+}
+
+### GET users
+GET http://localhost:3003/api/users

@@ -5,13 +5,34 @@ const api = supertest(app)
 const Blog = require('../models/blog')
 const helper = require('./test_helper')
 const util = require("util");
+const User = require("../models/user");
+const bcrypt = require("bcrypt");
 
 beforeEach(
   async () => {
-    await Blog.deleteMany({})
-    const blogs = helper.initialBlogs.map(blog => new Blog(blog))
-    const blogPromises = blogs.map(blog => blog.save())
-    await Promise.all(blogPromises)
+
+    const loadBlogs = async () => {
+      await Blog.deleteMany({})
+      const blogs = helper.initialBlogs.map(blog => new Blog(blog))
+      const blogPromises = blogs.map(blog => blog.save())
+      await Promise.all(blogPromises)
+    }
+    const loadUsers = async () => {
+      await User.deleteMany({})
+      const addNewUser = async user => {
+        const passwordHash = await bcrypt.hash(user.password, 10)
+        const userToAdd = new User({
+          username: user.username,
+          name: user.name,
+          passwordHash: passwordHash
+        })
+        await userToAdd.save()
+      }
+      const userPromises = helper.initialUsers.map(user => addNewUser(user))
+      await Promise.all(userPromises)
+    }
+
+    await Promise.all([loadBlogs(), loadUsers()])
   }
 )
 
@@ -53,6 +74,27 @@ describe('adding a blog to the database', () => {
 
     expect(blogsAfter).toHaveLength(blogsBefore.length + 1)
     expect(blogContents).toContainEqual(blogToAdd)
+  })
+
+  test('has the correct user data', async () => {
+
+    const blogToAdd = {
+      title: "Jack Test",
+      author: "Jack Porter",
+      url: "https://google.com/",
+      likes: 2
+    }
+
+    response = await api
+      .post('/api/blogs')
+      .send(blogToAdd)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    console.log(response.body.user)
+
+    expect(response.body.user).toBeDefined()
+
   })
 
   test('without the likes field set has it default to 0', async () => {
@@ -172,14 +214,6 @@ describe('updating a blog post', () => {
     expect(responseBlog.body.likes).not.toBe(blogToUpdate.likes)
   })
 
-  //test('fails with status 404 given a non-existing id', async () => {
-  //  const nonExistingId = await helper.getNonExistingId()
-
-  //  const response = await api
-  //    .put(`/api/blogs/${nonExistingId}`)
-  //    .send({})
-  //  console.log(response.body)
-  //})
   test('fails with status 400 given an invalid id', async () => {
     const invalidId = 'aasdfasdem9'
 
@@ -188,6 +222,7 @@ describe('updating a blog post', () => {
       .expect(400)
   })
 })
+
 
 afterAll ( async () => {
     await mongoose.connection.close()
