@@ -12,7 +12,8 @@ beforeEach(
 
     const loadBlogs = async () => {
       await Blog.deleteMany({})
-      const blogs = helper.initialBlogs.map(blog => new Blog(blog))
+      const user = await User.findOne({})
+      const blogs = helper.initialBlogs.map(blog => new Blog({...blog, user: user._id}))
       const blogPromises = blogs.map(blog => blog.save())
       await Promise.all(blogPromises)
     }
@@ -31,7 +32,9 @@ beforeEach(
       await Promise.all(userPromises)
     }
 
-    await Promise.all([loadBlogs(), loadUsers()])
+    // must load users first so blogs can get a user
+    await loadUsers()
+    await loadBlogs()
   }
 )
 
@@ -62,42 +65,25 @@ describe('adding a blog to the database', () => {
       likes: 2
     }
 
-    await api
+    const user = await User.findOne({})
+
+    const addedBlog = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .send(blogToAdd)
       .expect(201)
 
     const blogsAfter = await helper.getBlogsInDB()
 
-    const blogContents = blogsAfter.map(({id, user, ...blogNoId}) => blogNoId)
-
     expect(blogsAfter).toHaveLength(blogsBefore.length + 1)
-    expect(blogContents).toContainEqual(blogToAdd)
+    expect(blogsAfter).toContainEqual(addedBlog.body)
+    expect(addedBlog.body.user).toBe(user._id.toString())
   })
 
-  test('has the correct user data', async () => {
-
-    const blogToAdd = {
-      title: "Jack Test",
-      author: "Jack Porter",
-      url: "https://google.com/",
-      likes: 2
-    }
-
-    response = await api
-      .post('/api/blogs')
-      .send(blogToAdd)
-      .expect(201)
-      .expect('Content-Type', /application\/json/)
-
-    console.log(response.body.user)
-
-    expect(response.body.user).toBeDefined()
-
-  })
 
   test('without the likes field set has it default to 0', async () => {
 
+    const user = await User.findOne({})
     const blogToAdd = {
       title: "Jack Test",
       author: "Jack Porter",
@@ -106,6 +92,7 @@ describe('adding a blog to the database', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .send(blogToAdd)
       .expect(201)
 
@@ -118,15 +105,17 @@ describe('adding a blog to the database', () => {
   test('without a title returns 400 bad request', async () => {
 
     const blogsBefore = await helper.getBlogsInDB()
-
+    const user = await User.findOne({})
     const blogToAdd = {
       author: "Jack Porter",
       url: "https://google.com/",
       likes: 4
     }
 
+
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .send(blogToAdd)
       .expect(400)
 
@@ -139,6 +128,7 @@ describe('adding a blog to the database', () => {
   test('without a url returns 400 bad request', async () => {
 
     const blogsBefore = await helper.getBlogsInDB()
+    const user = await User.findOne({})
 
     const blogToAdd = {
       title: "Jack Test",
@@ -148,6 +138,7 @@ describe('adding a blog to the database', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .send(blogToAdd)
       .expect(400)
 
@@ -156,6 +147,46 @@ describe('adding a blog to the database', () => {
     expect(blogsAfter).toHaveLength(blogsBefore.length)
   })
 
+  test('without a token returns status 400', async () => {
+    const blogsBefore = await helper.getBlogsInDB()
+
+    const blogToAdd = {
+      title: "Jack Test",
+      author: "Jack Porter",
+      url: "https://google.com/",
+      likes: 2
+    }
+
+    const response = await api
+      .post('/api/blogs')
+      .send(blogToAdd)
+      .expect(400)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    expect(blogsAfter).toEqual(blogsBefore)
+    expect(response.body.error).toContain('jwt must be provided')
+  })
+
+  test('with an invalid token returns status 400, invalid token', async () => {
+    const blogsBefore = await helper.getBlogsInDB()
+
+    const blogToAdd = {
+      title: "Jack Test",
+      author: "Jack Porter",
+      url: "https://google.com/",
+      likes: 2
+    }
+
+    const response = await api
+      .post('/api/blogs')
+      .set('Authorization', `Bearer lkj.sdflk.jsldkfj`)
+      .send(blogToAdd)
+      .expect(400)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    expect(blogsAfter).toEqual(blogsBefore)
+    expect(response.body.error).toContain('invalid token')
+  })
 })
 
 describe('deleting a blog from the database', () => {

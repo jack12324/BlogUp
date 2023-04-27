@@ -24,6 +24,7 @@ blogSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     let transformObject = returnedObject
     transformObject.id = returnedObject._id.toString()
+    transformObject.user = returnedObject.user.toString()
     delete transformObject._id
     delete transformObject.__v
   }
