@@ -14,8 +14,11 @@ beforeEach(
       await Blog.deleteMany({})
       const user = await User.findOne({})
       const blogs = helper.initialBlogs.map(blog => new Blog({...blog, user: user._id}))
+      const blogIds = blogs.map(blog => blog._id)
       const blogPromises = blogs.map(blog => blog.save())
-      await Promise.all(blogPromises)
+
+      const userPromise = user.updateOne({blogs: blogIds})
+      await Promise.all(blogPromises.concat(userPromise))
     }
     const loadUsers = async () => {
       await User.deleteMany({})
@@ -147,7 +150,7 @@ describe('adding a blog to the database', () => {
     expect(blogsAfter).toHaveLength(blogsBefore.length)
   })
 
-  test('without a token returns status 400', async () => {
+  test('without a token returns status 401', async () => {
     const blogsBefore = await helper.getBlogsInDB()
 
     const blogToAdd = {
@@ -160,11 +163,11 @@ describe('adding a blog to the database', () => {
     const response = await api
       .post('/api/blogs')
       .send(blogToAdd)
-      .expect(400)
+      .expect(401)
 
     const blogsAfter = await helper.getBlogsInDB()
     expect(blogsAfter).toEqual(blogsBefore)
-    expect(response.body.error).toContain('jwt must be provided')
+    expect(response.body.error).toContain('invalid credentials to add blog')
   })
 
   test('with an invalid token returns status 400, invalid token', async () => {
@@ -190,12 +193,15 @@ describe('adding a blog to the database', () => {
 })
 
 describe('deleting a blog from the database', () => {
-  test('succeeds with status 204 given a valid and existing id', async () => {
+  test('succeeds with status 204 given a valid and existing id and token', async () => {
     const blogsBefore = await helper.getBlogsInDB()
     const blogToDelete = blogsBefore[0]
 
+    const user  = await User.findOne({_id: blogToDelete.user})
+
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .expect(204)
 
     const blogsAfter = await helper.getBlogsInDB()
@@ -205,12 +211,72 @@ describe('deleting a blog from the database', () => {
     expect(blogIds).not.toContain(blogToDelete.id)
   })
 
-  test('succeeds with status 204 given a non-existing id', async () => {
-    const nonExistingId = await helper.getNonExistingId()
+  test('removes it from it\'s user', async () => {
+
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogToDelete = blogsBefore[0]
+
+    const user  = await User.findOne({_id: blogToDelete.user})
+
+    expect(user.blogs.map(blog => blog.toString())).toContain(blogToDelete.id)
 
     await api
-      .delete(`/api/blogs/${nonExistingId}`)
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .expect(204)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    const blogIds = blogsAfter.map(blog => blog.id)
+    const userAfter  = await User.findOne({_id: blogToDelete.user})
+
+    expect(blogsAfter).toHaveLength(blogsBefore.length - 1)
+    expect(blogIds).not.toContain(blogToDelete.id)
+
+    expect(userAfter.blogs.map(blog => blog.toString())).not.toContain(blogToDelete.id)
+  })
+
+  test('fails with 401 and error message given the wrong user token', async () => {
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogToDelete = blogsBefore[0]
+
+    const user  = await User.findOne({}).where('_id').ne(blogToDelete.user)
+
+    const response = await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(401)
+
+    const blogsAfter = await helper.getBlogsInDB()
+
+    expect(blogsAfter).toEqual(blogsBefore)
+    expect(response.body.error).toContain('invalid credentials to delete blog')
+  })
+
+  test('fails with 401 and error message given no token', async () => {
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogToDelete = blogsBefore[0]
+
+    const response = await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401)
+
+    const blogsAfter = await helper.getBlogsInDB()
+
+    expect(blogsAfter).toEqual(blogsBefore)
+    expect(response.body.error).toContain('invalid credentials to delete blog')
+  })
+
+  test('succeeds with status 404 given a non-existing id', async () => {
+    const nonExistingId = await helper.getNonExistingId()
+    const user  = await User.findOne({})
+
+    const response = await api
+      .delete(`/api/blogs/${nonExistingId}`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(404)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('blog does not exist on server')
   })
   test('fails with status 400 given an invalid id', async () => {
     const invalidId = 'aasdfasdem9'
