@@ -2,6 +2,7 @@ const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', {username: 1, name: 1})
+  console.log(blogs[0].user.toString())
   response.json(blogs)
 })
 
@@ -10,7 +11,7 @@ blogsRouter.post('/', async (request, response) => {
 
   const user = request.user
   if(!user){
-    response.status(401).json({error:'invalid credentials to add blog'})
+    return response.status(401).json({error:'invalid credentials to add blog'})
   }
 
   const blog = new Blog({
@@ -48,12 +49,13 @@ blogsRouter.delete('/:id', async (request, response) => {
 })
 
 blogsRouter.put('/:id', async (request, response) => {
-  const blog = request.body
+  const blog = {...request.body, user: request.body.user.id}
+  console.log(blog)
   const updatedBlog = await Blog.findByIdAndUpdate(
     request.params.id,
     blog,
-    {new: true, runValidators: true, context: 'query'}
-  )
+    {new: true, runValidators: true, context: 'query'})
+    .populate('user', {username: 1, name: 1})
   response.json(updatedBlog)
 })
 

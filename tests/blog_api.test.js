@@ -190,6 +190,25 @@ describe('adding a blog to the database', () => {
     expect(blogsAfter).toEqual(blogsBefore)
     expect(response.body.error).toContain('invalid token')
   })
+
+  test('without a authorization header returns 401', async () => {
+    const blogsBefore = await helper.getBlogsInDB()
+
+    const blogToAdd = {
+      title: "Jack Test",
+      author: "Jack Porter",
+      url: "https://google.com/",
+      likes: 2
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(blogToAdd)
+      .expect(401)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    expect(blogsAfter).toEqual(blogsBefore)
+  })
 })
 
 describe('deleting a blog from the database', () => {

@@ -13,14 +13,25 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb
   "likes": 10
 }
 
+### POST new note without header
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "Making a hat",
+  "author": "The Mad Hatter",
+  "url": "hats.com",
+  "likes": 10
+}
+
 ### POST a new user
 POST http://localhost:3003/api/users
 Content-Type: application/json
 
 {
-  "username": "root",
-  "name": "superuser",
-  "password": "a;slkfiejlskdjfl"
+  "username": "jack",
+  "name": "jack",
+  "password": "jack"
 }
 
 ### GET users
@@ -35,3 +46,4 @@ Content-Type: application/json
   "password": "a;slkfiejlskdjfl"
 }
 
+### DELETE user
