@@ -26,6 +26,7 @@
     "test": "cross-env NODE_ENV=test jest --verbose",
     "dev": "cross-env NODE_ENV=dev nodemon index.js",
     "prod": "cross-env NODE_ENV=prod node index.js",
+    "test:dev": "cross-env NODE_ENV=e2etest node index.js",
     "test-api": "cross-env NODE_ENV=test jest --verbose -- tests/blog_api.test.js"
   },
   "author": "Jack Porter",
