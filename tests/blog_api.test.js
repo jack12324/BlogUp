@@ -323,7 +323,10 @@ describe('updating a blog post', () => {
 
     const blogsAfter = await helper.getBlogsInDB()
 
-    expect(blogsAfter).toContainEqual(responseBlog.body)
+
+    const body = {...responseBlog.body, user: responseBlog.body.user.id}
+
+    expect(blogsAfter).toContainEqual(body)
     expect(responseBlog.body.likes).toBe(updatedBlog.likes)
     expect(responseBlog.body.likes).not.toBe(blogToUpdate.likes)
   })

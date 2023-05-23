@@ -46,4 +46,5 @@ Content-Type: application/json
   "password": "a;slkfiejlskdjfl"
 }
 
-### DELETE user
+### PUT invalid id
+PUT http://localhost:3003/api/blogs/lksjdfei
