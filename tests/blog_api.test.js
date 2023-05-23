@@ -38,7 +38,7 @@ beforeEach(
     // must load users first so blogs can get a user
     await loadUsers()
     await loadBlogs()
-  }
+  }, 10000
 )
 
 describe('when some blogs already exist', () => {
@@ -55,7 +55,6 @@ describe('when some blogs already exist', () => {
     const blogs = await helper.getBlogsInDB()
     expect(blogs[0].id).toBeDefined()
   })
-})
 
 describe('adding a blog to the database', () => {
   test('succeeds with valid data', async () => {
@@ -65,7 +64,8 @@ describe('adding a blog to the database', () => {
       title: "Jack Test",
       author: "Jack Porter",
       url: "https://google.com/",
-      likes: 2
+      likes: 2,
+      comments: ['test comment 1', 'test comment 2']
     }
 
     const user = await User.findOne({})
@@ -103,6 +103,29 @@ describe('adding a blog to the database', () => {
 
     expect(addedBlog.likes).toBe(0)
 
+  })
+
+  test('without the comments field set has it default to an empty array', async () => {
+
+    const blogToAdd = {
+      title: "Jack Test",
+      author: "Jack Porter",
+      url: "https://google.com/",
+      likes: 2
+    }
+
+    const user = await User.findOne({})
+
+   await api
+      .post('/api/blogs')
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .send(blogToAdd)
+      .expect(201)
+
+    const addedBlog = await Blog.findOne({title: blogToAdd.title, author: blogToAdd.author, url: blogToAdd.url})
+
+    expect(addedBlog.comments).toBeDefined()
+    expect(addedBlog.comments).toHaveLength(0)
   })
 
   test('without a title returns 400 bad request', async () => {
@@ -338,6 +361,79 @@ describe('updating a blog post', () => {
       .put(`/api/blogs/${invalidId}`)
       .expect(400)
   })
+
+  test('with a new comment succeeds', async () => {
+    const blogsBefore = await helper.getBlogsInDB()
+
+    const blogBefore = blogsBefore[0]
+    const comment = 'A new test comment'
+
+    const response = await api
+      .post(`/api/blogs/${blogBefore.id}/comments`)
+      .send({comment})
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+
+    expect(response.body).toBe(comment)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    const blogAfter = blogsAfter[0]
+
+    expect(blogAfter.comments).toHaveLength(blogBefore.comments.length + 1)
+    expect(blogAfter.comments).toContain(comment)
+  })
+
+  test('with a comment of invalid length returns 400 bad request and an error message', async () => {
+
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogBefore = blogsBefore[0]
+    const comment = 'a'
+
+    const response = await api
+      .post(`/api/blogs/${blogBefore.id}/comments`)
+      .send({comment})
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('comment must be at least 5 characters')
+
+  })
+
+  test('with an existing comment returns 400 bad request and an error message', async () => {
+
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogBefore = blogsBefore.filter(blog => blog.comments.length > 0)[0]
+    console.log(blogBefore)
+    const comment = blogBefore.comments[0]
+
+    const response = await api
+      .post(`/api/blogs/${blogBefore.id}/comments`)
+      .send({comment})
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('comment must be unique')
+
+  })
+
+  test('with a whitespace comment returns 400 bad request and an error message', async () => {
+
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogBefore = blogsBefore[1]
+    const comment = '                  '
+
+    const response = await api
+      .post(`/api/blogs/${blogBefore.id}/comments`)
+      .send({comment})
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('comment must be at least 5 characters')
+
+  })
+
+})
 })
 
 

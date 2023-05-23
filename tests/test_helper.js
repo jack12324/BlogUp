@@ -15,7 +15,8 @@ const initialBlogs = [
     title: "Go To Statement Considered Harmful",
     author: "Edsger W. Dijkstra",
     url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5
+    likes: 5,
+    comments: ['an existing comment']
   },
   {
     id: "5a422b3a1b54a676234d17f9",

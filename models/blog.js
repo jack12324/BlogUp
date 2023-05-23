@@ -18,8 +18,29 @@ const blogSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  comments: {
+    type: [String],
+    default: [],
+    validate: [
+      {validator: validateCommentLengths, msg: 'comment must be at least 5 characters'},
+      {validator: validateUniqueComment, msg: 'comment must be unique'}
+    ]
   }
 })
+
+function validateCommentLengths (comments) {
+  for(comment of comments){
+    if (comment.length < 5) {
+      return false
+    }
+  }
+  return true
+}
+
+function validateUniqueComment (comments)  {
+  return new Set(comments).size === comments.length
+}
 
 blogSchema.set('toJSON', {
   transform: (document, returnedObject) => {
