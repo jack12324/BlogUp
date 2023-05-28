@@ -80,6 +80,7 @@ blogsRouter.post('/:id/likes', blogExtractor, async (request, response) => {
   const blog = request.blog
 
 
+
   if(!user) {
     return response.status(401).json({error: 'must be logged in to like a blog'})
   }
@@ -89,12 +90,11 @@ blogsRouter.post('/:id/likes', blogExtractor, async (request, response) => {
   }
 
   blog.likes = blog.likes + 1
-
   blog.usersWhoLike = blog.usersWhoLike.concat(user._id)
-  await blog.save()
-
   user.likedBlogs = user.likedBlogs.concat(blog._id)
+
   await user.save()
+  await blog.save()
 
   response.status(201).end()
 })
@@ -114,10 +114,10 @@ blogsRouter.delete('/:id/likes', blogExtractor, async (request, response) => {
 
   blog.likes = blog.likes - 1
   blog.usersWhoLike = blog.usersWhoLike.filter(u => u.toString() !== user._id.toString())
-  await blog.save()
-
   user.likedBlogs = user.likedBlogs.filter(b => b.toString() !== blog._id.toString())
+
   await user.save()
+  await blog.save()
 
   response.status(204).end()
 })
