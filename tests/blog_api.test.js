@@ -55,7 +55,6 @@ describe('when some blogs already exist', () => {
     const blogs = await helper.getBlogsInDB()
     expect(blogs[0].id).toBeDefined()
   })
-
 describe('adding a blog to the database', () => {
   test('succeeds with valid data', async () => {
     const blogsBefore = await helper.getBlogsInDB()
@@ -233,7 +232,6 @@ describe('adding a blog to the database', () => {
     expect(blogsAfter).toEqual(blogsBefore)
   })
 })
-
 describe('deleting a blog from the database', () => {
   test('succeeds with status 204 given a valid and existing id and token', async () => {
     const blogsBefore = await helper.getBlogsInDB()
@@ -252,7 +250,6 @@ describe('deleting a blog from the database', () => {
     expect(blogsAfter).toHaveLength(blogsBefore.length - 1)
     expect(blogIds).not.toContain(blogToDelete.id)
   })
-
   test('removes it from it\'s user', async () => {
 
     const blogsBefore = await helper.getBlogsInDB()
@@ -276,7 +273,6 @@ describe('deleting a blog from the database', () => {
 
     expect(userAfter.blogs.map(blog => blog.toString())).not.toContain(blogToDelete.id)
   })
-
   test('fails with 401 and error message given the wrong user token', async () => {
     const blogsBefore = await helper.getBlogsInDB()
     const blogToDelete = blogsBefore[0]
@@ -293,7 +289,6 @@ describe('deleting a blog from the database', () => {
     expect(blogsAfter).toEqual(blogsBefore)
     expect(response.body.error).toContain('invalid credentials to delete blog')
   })
-
   test('fails with 401 and error message given no token', async () => {
     const blogsBefore = await helper.getBlogsInDB()
     const blogToDelete = blogsBefore[0]
@@ -307,8 +302,7 @@ describe('deleting a blog from the database', () => {
     expect(blogsAfter).toEqual(blogsBefore)
     expect(response.body.error).toContain('invalid credentials to delete blog')
   })
-
-  test('succeeds with status 404 given a non-existing id', async () => {
+  test('fails with status 404 given a non-existing id', async () => {
     const nonExistingId = await helper.getNonExistingId()
     const user  = await User.findOne({})
 
@@ -328,32 +322,33 @@ describe('deleting a blog from the database', () => {
       .expect(400)
   })
 })
-
-
 describe('updating a blog post', () => {
 
-  test('succeeds with status 200 for valid data', async () => {
+  test('can update title, author, and url but can\'t update likes', async () => {
     const blogsBefore = await helper.getBlogsInDB()
 
     const blogToUpdate = blogsBefore[0]
-    const updatedBlog = {...blogToUpdate, likes: blogToUpdate.likes + 8}
+    const updatedBlog = {...blogToUpdate, likes: blogToUpdate.likes + 8, title: 'new title', author: 'new author', url: 'new url'}
+
+    const user  = await User.findOne({_id: blogToUpdate.user})
 
     const responseBlog = await api
       .put(`/api/blogs/${blogToUpdate.id}`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
       .send(updatedBlog)
       .expect(200)
       .expect('Content-Type', /application\/json/)
 
     const blogsAfter = await helper.getBlogsInDB()
-
-
     const body = {...responseBlog.body, user: responseBlog.body.user.id}
 
     expect(blogsAfter).toContainEqual(body)
-    expect(responseBlog.body.likes).toBe(updatedBlog.likes)
-    expect(responseBlog.body.likes).not.toBe(blogToUpdate.likes)
+    expect(responseBlog.body.likes).toBe(blogToUpdate.likes)
+    expect(responseBlog.body.likes).not.toBe(updatedBlog.likes)
+    expect(responseBlog.body.title).toBe(updatedBlog.title)
+    expect(responseBlog.body.author).toBe(updatedBlog.author)
+    expect(responseBlog.body.url).toBe(updatedBlog.url)
   })
-
   test('fails with status 400 given an invalid id', async () => {
     const invalidId = 'aasdfasdem9'
 
@@ -361,7 +356,6 @@ describe('updating a blog post', () => {
       .put(`/api/blogs/${invalidId}`)
       .expect(400)
   })
-
   test('with a new comment succeeds', async () => {
     const blogsBefore = await helper.getBlogsInDB()
 
@@ -383,7 +377,6 @@ describe('updating a blog post', () => {
     expect(blogAfter.comments).toHaveLength(blogBefore.comments.length + 1)
     expect(blogAfter.comments).toContain(comment)
   })
-
   test('with a comment of invalid length returns 400 bad request and an error message', async () => {
 
     const blogsBefore = await helper.getBlogsInDB()
@@ -399,12 +392,10 @@ describe('updating a blog post', () => {
     expect(response.body.error).toContain('comment must be at least 5 characters')
 
   })
-
   test('with an existing comment returns 400 bad request and an error message', async () => {
 
     const blogsBefore = await helper.getBlogsInDB()
     const blogBefore = blogsBefore.filter(blog => blog.comments.length > 0)[0]
-    console.log(blogBefore)
     const comment = blogBefore.comments[0]
 
     const response = await api
@@ -416,7 +407,6 @@ describe('updating a blog post', () => {
     expect(response.body.error).toContain('comment must be unique')
 
   })
-
   test('with a whitespace comment returns 400 bad request and an error message', async () => {
 
     const blogsBefore = await helper.getBlogsInDB()
@@ -434,8 +424,139 @@ describe('updating a blog post', () => {
   })
 
 })
+describe('liking a blog post', () =>{
+  test('returns 404 if given non existing blog to like', async() => {
+    const nonExistingId = await helper.getNonExistingId()
+    const user  = await User.findOne({})
+
+    const response = await api
+      .post(`/api/blogs/${nonExistingId}/likes`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(404)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('blog does not exist')
+  })
+  test('returns 201 if the user has not liked the post previously and updates the corresponding blog and user accordingly', async () =>{
+    const blogsBefore = await helper.getBlogsInDB()
+    const blogToLike = blogsBefore[0]
+
+    const user  = await User.findOne({})
+
+    await api
+      .post(`/api/blogs/${blogToLike.id}/likes`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(201)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    const blogAfter = blogsAfter.find(blog=> blog.id === blogToLike.id)
+
+    const userAfter  = await User.findOne({_id: user._id})
+
+    expect(blogAfter.likes).toBe(blogToLike.likes + 1)
+    expect(blogAfter.usersWhoLike).toContain(user._id.toString())
+
+    expect(userAfter.likedBlogs.map(b => b.toString())).toContain(blogAfter.id)
+    expect(userAfter.likedBlogs).toHaveLength(user.likedBlogs.length +1)
+
+  })
+  test('returns 401 if the request is made without a user logged in', async () => {
+
+    const blog = await Blog.findOne({})
+    const response = await api
+      .post(`/api/blogs/${blog._id.toString()}/likes`)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('must be logged in to like a blog')
+  })
+  test('returns 400 if the user has already liked the post', async () => {
+
+    const blogToLike = await Blog.findOne({})
+    const user  = await User.findOne({})
+
+    blogToLike.usersWhoLike = blogToLike.usersWhoLike.concat(user._id)
+    await blogToLike.save()
+
+    const response = await api
+      .post(`/api/blogs/${blogToLike.id}/likes`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('user has already liked this blog')
+
+  })
+})
+describe('unliking a blog post', () =>{
+  test('returns 404 if given non existing blog to unlike', async() => {
+    const nonExistingId = await helper.getNonExistingId()
+    const user  = await User.findOne({})
+
+    const response = await api
+      .delete(`/api/blogs/${nonExistingId}/likes`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(404)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('blog does not exist')
+  })
+  test('returns 204 if the user has liked the post previously and updates the corresponding blog and user accordingly', async () =>{
+
+    const blogToLike = await Blog.findOne({})
+    const user  = await User.findOne({})
+
+    blogToLike.usersWhoLike = blogToLike.usersWhoLike.concat(user._id)
+    user.likedBlogs = user.likedBlogs.concat(blogToLike._id)
+
+    await blogToLike.save()
+    await user.save()
+
+    await api
+      .delete(`/api/blogs/${blogToLike.id}/likes`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(204)
+
+    const blogsAfter = await helper.getBlogsInDB()
+    const blogAfter = blogsAfter.find(blog=> blog.id === blogToLike.id)
+
+    const userAfter  = await User.findOne({_id: user._id})
+
+    expect(blogAfter.likes).toBe(blogToLike.likes - 1)
+    expect(blogAfter.usersWhoLike).not.toContain(user._id.toString())
+    expect(blogAfter.usersWhoLike).toHaveLength(blogToLike.usersWhoLike.length - 1)
+
+    expect(userAfter.likedBlogs.map(b => b.toString())).not.toContain(blogAfter.id)
+    expect(userAfter.likedBlogs).toHaveLength(user.likedBlogs.length - 1)
+
+  })
+  test('returns 401 if the request is made without a user logged in', async () => {
+
+    const blog = await Blog.findOne({})
+    const response = await api
+      .delete(`/api/blogs/${blog._id.toString()}/likes`)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('must be logged in to unlike a blog')
+  })
+  test('returns 400 if the user has not already liked the post', async () => {
+
+    const blogToLike = await Blog.findOne({})
+    const user  = await User.findOne({})
+
+    const response = await api
+      .delete(`/api/blogs/${blogToLike.id}/likes`)
+      .set('Authorization', `Bearer ${helper.getTokenForUser(user)}`)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.error).toContain('user has not liked this blog yet')
+
+  })
 })
 
+})
 
 afterAll ( async () => {
     await mongoose.connection.close()

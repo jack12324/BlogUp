@@ -65,7 +65,8 @@ const getBlogsInDB = async () => {
   const blogs = await Blog.find({})
   return blogs.map(blog => blog.toJSON()).map(blog => ({
     ...blog,
-    user: blog.user.toString()
+    user: blog.user.toString(),
+    usersWhoLike: blog.usersWhoLike.map(u => u.toString())
   }))
 }
 const getUsersInDB = async () => {

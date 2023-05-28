@@ -1,6 +1,7 @@
 const logger = require('./logger')
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const Blog = require("../models/blog");
 
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
@@ -48,10 +49,20 @@ const userExtractor = async (request, response, next) => {
   next()
 }
 
+const blogExtractor = async (request, response, next) => {
+  const blog = await Blog.findById(request.params.id)
+  if(!blog){
+    return response.status(404).json({error: 'blog does not exist on server'})
+  }
+  request.blog = blog
+  next()
+}
+
 module.exports = {
   unknownEndpoint,
   errorHandler,
   requestLogger,
   tokenExtractor,
-  userExtractor
+  userExtractor,
+  blogExtractor
 }

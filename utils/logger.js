@@ -1,11 +1,12 @@
+const override = false
 const info = (...params) => {
-  if(process.env.NODE_ENV !== 'test') {
+  if(process.env.NODE_ENV !== 'test' || override) {
     console.log(...params)
   }
 }
 
 const  error = (...params) => {
-  if(process.env.NODE_ENV !== 'test') {
+  if(process.env.NODE_ENV !== 'test' || override) {
     console.error(...params)
   }
 }
