@@ -12,10 +12,9 @@ usersRouter.post('/', async (request, response) => {
   if(!password){
     return response.status(400).json({error: 'password is required'})
   }
-  if(password.length < 3){
-    return response.status(400).json({error: 'password must be at least 3 characters'})
+  if(password.length < 4){
+    return response.status(400).json({error: 'password must be at least 4 characters'})
   }
-
 
   const numSalts = 10
   const passwordHash = await bcrypt.hash(password, numSalts)
@@ -23,7 +22,7 @@ usersRouter.post('/', async (request, response) => {
   const userToAdd = new User({
     passwordHash: passwordHash,
     username: username,
-    name: name,
+    name: name ? name : username,
   })
 
   const savedUser = await userToAdd.save()
