@@ -133,7 +133,7 @@ describe('When there initially some users in db', () => {
 
       const usersAfter = await helper.getUsersInDB()
       expect(usersAfter).toEqual(usersBefore)
-      expect(response.body.error).toContain('password must be at least 3 characters')
+      expect(response.body.error).toContain('password must be at least 4 characters')
     })
 
     test('fails with 400 if username is too short and returns error message', async () => {
