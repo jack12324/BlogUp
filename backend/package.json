@@ -23,10 +23,10 @@
   "version": "1.0.0",
   "main": ".eslintrc.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --verbose",
-    "dev": "cross-env NODE_ENV=dev nodemon index.js",
-    "prod": "cross-env NODE_ENV=prod node index.js",
-    "dev:e2e": "cross-env NODE_ENV=e2etest node index.js"
+    "backend:test": "cross-env NODE_ENV=test jest --runInBand --verbose",
+    "backend:dev": "cross-env NODE_ENV=dev nodemon index.js",
+    "backend:prod": "cross-env NODE_ENV=prod node index.js",
+    "backend:e2e": "cross-env NODE_ENV=e2etest node index.js"
   },
   "author": "Jack Porter",
   "license": "ISC",
