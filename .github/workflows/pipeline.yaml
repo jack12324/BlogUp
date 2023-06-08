@@ -1,0 +1,38 @@
+name: Deployment pipeline
+
+on: workflow_dispatch
+
+jobs:
+  checkout_and_node:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '19.8.1'
+
+  frontend_dependencies:
+    needs: [checkout_and_node]
+    runs-on: ubuntu-20.04
+    steps:
+      - run: "cd frontend"
+      - run: npm install
+
+  backend_dependencies:
+    needs: [checkout_and_node]
+    runs-on: ubuntu-20.04
+    steps:
+      - run: cd backend
+      - run: npm install
+
+  root_dependencies:
+    needs: [checkout_and_node]
+    runs-on: ubuntu-20.04
+    steps:
+      - run: npm install
+
+  lint:
+    needs: [frontend_dependenceis, backend_dependencies, root_dependencies]
+    runs-on: ubuntu-20.04
+    steps:
+      - run: npm run lint
