@@ -1,0 +1,19 @@
+{
+  "name": "bloglist",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "concurrently \"cd backend && npm run backend:dev\" \"cd frontend && npm run start\"",
+    "lint": "eslint .",
+    "test:backend": "cd backend && npm run test",
+    "test:e2e:dev": "(concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\") && (cd frontend && npm run e2e)"
+  },
+  "author": "Jack Porter",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "prettier": "^2.8.8",
+    "concurrently": "^8.1.0"
+  }
+}
