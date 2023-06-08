@@ -84,7 +84,12 @@ function BlogForm({ onClose }) {
         </FormControl>
       </ModalBody>
       <ModalFooter>
-        <Button colorScheme="green" bgColor="green.300" onClick={handleSubmit}>
+        <Button
+          id="blog-form-submit-button"
+          colorScheme="green"
+          bgColor="green.300"
+          onClick={handleSubmit}
+        >
           Add
         </Button>
       </ModalFooter>

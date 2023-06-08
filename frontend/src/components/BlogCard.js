@@ -92,7 +92,7 @@ function BlogCard({ blog }) {
           confirmText="Continue"
         />
       )}
-      <Center height="300px">
+      <Center height="300px" data-cy={`blog-${blog.title}`}>
         <Box
           h="300px"
           w="300px"
@@ -102,6 +102,7 @@ function BlogCard({ blog }) {
           borderColor="grey"
         >
           <Box
+            data-cy="blog-link"
             h="85%"
             aria-label={`link to ${blog.url}`}
             cursor="pointer"
@@ -120,6 +121,7 @@ function BlogCard({ blog }) {
                 fontSize="lg"
                 px="1"
                 pt="1"
+                data-cy="blog-title"
               >
                 {blog.title}
               </Heading>
@@ -136,6 +138,7 @@ function BlogCard({ blog }) {
                 <>
                   <Center>
                     <DeleteIcon
+                      data-cy="blog-delete-button"
                       as="button"
                       cursor="pointer"
                       onClick={onOpen}
@@ -146,7 +149,11 @@ function BlogCard({ blog }) {
                 </>
               ) : null}
               <HStack justify="space-between">
-                <Flex onClick={() => handleLikeClick(blog)} align="center">
+                <Flex
+                  data-cy="blog-like-button"
+                  onClick={() => handleLikeClick(blog)}
+                  align="center"
+                >
                   {userLikesBlog(currentUser, blog) ? (
                     <BsHeartFill
                       fill="hotpink"
@@ -157,7 +164,7 @@ function BlogCard({ blog }) {
                     <BsHeart fontSize="22px" cursor="pointer" />
                   )}
                 </Flex>
-                <Text>{blog.likes}</Text>
+                <Text data-cy="blog-like-count">{blog.likes}</Text>
               </HStack>
             </HStack>
           </HStack>

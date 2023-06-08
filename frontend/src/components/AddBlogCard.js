@@ -7,7 +7,12 @@ function AddBlogCard() {
 
   return (
     <>
-      <Center height="300px" cursor="pointer" onClick={onOpen}>
+      <Center
+        data-cy="add-blog"
+        height="300px"
+        cursor="pointer"
+        onClick={onOpen}
+      >
         <Center
           h="300px"
           w="300px"

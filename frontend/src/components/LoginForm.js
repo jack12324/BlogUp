@@ -70,7 +70,12 @@ function LoginForm({ onClose, signupClicked }) {
         <RequiredFormPasswordControl field={password} />
       </ModalBody>
       <ModalFooter>
-        <Button colorScheme="green" bgColor="green.300" onClick={login}>
+        <Button
+          id="login-form-submit"
+          colorScheme="green"
+          bgColor="green.300"
+          onClick={login}
+        >
           Log In
         </Button>
       </ModalFooter>

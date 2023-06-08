@@ -38,7 +38,12 @@ function ConfirmAlert({
           <Button ref={cancelRef} onClick={onClose}>
             Cancel
           </Button>
-          <Button colorScheme="red" onClick={confirmClicked} ml="3">
+          <Button
+            colorScheme="red"
+            onClick={confirmClicked}
+            ml="3"
+            data-cy="alert-confirm-button"
+          >
             {confirmText}
           </Button>
         </AlertDialogFooter>

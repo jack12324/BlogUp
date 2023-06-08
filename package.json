@@ -6,7 +6,7 @@
     "dev": "concurrently \"cd backend && npm run backend:dev\" \"cd frontend && npm run start\"",
     "lint": "eslint .",
     "test:backend": "cd backend && npm run test",
-    "test:e2e:dev": "(concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\") && (cd frontend && npm run e2e)"
+    "test:e2e:dev": "(concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\")"
   },
   "author": "Jack Porter",
   "license": "ISC",

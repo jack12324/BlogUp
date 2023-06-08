@@ -14,29 +14,28 @@ describe("Blog app", () => {
     cy.visit("");
   });
 
-  it("Login form is shown", () => {
-    cy.contains("login");
+  it("Login bar is shown", () => {
+    cy.contains("Log In");
   });
 
   describe("Login", () => {
     beforeEach(() => {});
     it("succeeds with correct credentials", () => {
-      cy.contains("login").click();
+      cy.contains("Log In").click();
       cy.get("#username").type("test_user");
       cy.get("#password").type("test");
       cy.get("#login-form-submit").click();
-      cy.contains("Test User is logged in");
+      cy.contains("Welcome");
     });
     it("fails with wrong credentials", () => {
-      cy.contains("login").click();
+      cy.contains("Log In").click();
       cy.get("#username").type("test_user");
       cy.get("#password").type("wrong");
       cy.get("#login-form-submit").click();
-      cy.get(".error")
-        .should("contain", "Wrong Username or Password")
-        .and("have.css", "color", "rgb(255, 0, 0)")
-        .and("have.css", "border-style", "solid");
-      cy.get("html").should("not.contain", "Test User is logged in");
+      cy.get("[data-status=error]").should(
+        "contain",
+        "invalid username or password"
+      );
     });
   });
 
@@ -45,12 +44,13 @@ describe("Blog app", () => {
       cy.login({ username: "test_user", password: "test" });
     });
     it("A blog can be created", () => {
-      cy.contains("Add a blog").click();
+      cy.contains("My Blogs").click();
+      cy.get("[data-cy=add-blog]").click();
       cy.get("#title").type("a cypress test exercise");
       cy.get("#author").type("jack porter");
       cy.get("#url").type("test.com");
       cy.get("#blog-form-submit-button").click();
-      cy.contains("a cypress test exercise jack porter");
+      cy.contains("a cypress test exercise");
     });
 
     const startingBlogs = [
@@ -83,28 +83,36 @@ describe("Blog app", () => {
         cy.login({ username: "test_user", password: "test" });
       });
       it("the user can like a blog", () => {
-        cy.contains("test blog 1").click();
-        cy.get(".likes").as("likesp");
-        cy.get("@likesp").contains("0");
-        cy.get("@likesp").contains("like").click();
-        cy.get("@likesp").contains("1");
+        cy.get(`[data-cy="blog-${startingBlogs[0].title}"]`)
+          .find("[data-cy=blog-like-button]")
+          .as("likeb");
+        cy.get(`[data-cy="blog-${startingBlogs[0].title}"]`)
+          .find("[data-cy=blog-like-count]")
+          .as("likec");
+        cy.get("@likec").contains("0");
+        cy.get("@likeb").click();
+        cy.get("@likec").contains("1");
       });
       it("the user can delete one of their blogs", () => {
-        cy.contains("test blog 1").click();
-        cy.get("#delete-blog-button").click();
-        cy.wait(6000);
-        cy.get("html").should("not.contain", "test blog 1");
+        cy.get(`[data-cy="blog-${startingBlogs[0].title}"]`)
+          .find("[data-cy=blog-delete-button]")
+          .click();
+        cy.get(`[data-cy=alert-confirm-button]`).contains("Delete").click();
+        cy.get(`[data-cy="blog-${startingBlogs[0].title}"]`).should(
+          "not.exist"
+        );
       });
       it("the user can not see the remove button if they didn't create the note", () => {
-        cy.contains("test blog 3").click();
-        cy.get("#delete-blog-button").should("not.exist");
+        cy.get(`[data-cy="blog-${startingBlogs[2].title}"]`)
+          .find("[data-cy=blog-delete-button]")
+          .should("not.exist");
       });
       it("blogs are displayed according the the number of likes", () => {
         const sortedStartingItems = startingBlogs.toSorted(
           (a, b) => b.likes - a.likes
         );
         sortedStartingItems.forEach((blog, i) => {
-          cy.get(".blog-item").eq(i).contains(blog.title);
+          cy.get("[data-cy=blog-title]").eq(i).contains(blog.title);
         });
       });
     });
