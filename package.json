@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "concurrently \"cd backend && npm run backend:dev\" \"cd frontend && npm run start\"",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run start\"",
     "dev:e2e": "concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\" \"wait-on http://localhost:3001 && cd frontend && npm run e2e:dev\"",
     "lint": "eslint .",
     "test:backend": "cd backend && npm run test",
