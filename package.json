@@ -10,7 +10,8 @@
     "prod:e2e":  "cd backend && npm run e2e",
     "test:e2e": "cd frontend && npm run e2e:static",
     "build": "cd frontend && rm -rf build && npm run build && cd ../backend && rm -rf build && cp -r ../frontend/build .",
-    "deploy": "cd backend && fly deploy --remote-only"
+    "deploy": "cd backend && fly deploy --remote-only",
+    "install:deps": "concurrently \"cd backend && npm install\" \"cd frontend && npm install\""
   },
   "author": "Jack Porter",
   "license": "ISC",
