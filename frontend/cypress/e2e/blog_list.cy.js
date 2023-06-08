@@ -108,7 +108,7 @@ describe("Blog app", () => {
           .should("not.exist");
       });
       it("blogs are displayed according the the number of likes", () => {
-        const sortedStartingItems = startingBlogs.toSorted(
+        const sortedStartingItems = [...startingBlogs].sort(
           (a, b) => b.likes - a.likes
         );
         sortedStartingItems.forEach((blog, i) => {
