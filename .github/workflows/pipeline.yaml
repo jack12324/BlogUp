@@ -1,38 +1,70 @@
 name: Deployment pipeline
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize]
+  workflow_dispatch:
 
 jobs:
-  checkout_and_node:
+  lint_test_and_deploy:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
       - uses: actions/setup-node@v3
         with:
           node-version: '19.8.1'
-
-  frontend_dependencies:
-    needs: [checkout_and_node]
+      - name: Root Dependencies
+        run: npm install
+      - name: Project Dependencies
+        run: npm run install:deps
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run : npm run build
+      - name: Backend Tests
+        run: npm run test:backend
+        env:
+          TEST_MONGODB_URI: ${{secrets.TEST_MONGODB_URI}}
+          SECRET: ${{secrets.TESTING_SECRET}}
+      - name: E2e tests
+        uses: cypress-io/github-action@v5
+        with:
+          command: npm run test:e2e
+          start: npm run prod:e2e
+          wait-on: http://localhost:3001
+        env:
+          TEST_MONGODB_URI: ${{secrets.TEST_MONGODB_URI}}
+          SECRET: ${{secrets.TESTING_SECRET}}
+          PORT: 3001
+      - name: Deploy
+        id: deploy
+        run: npm run deploy
+        env:
+          FLY_API_TOKEN: ${{secrets.FLY_API_TOKEN}}
+        if: (github.event_name == 'push') && !(contains(join(github.event.commits.*.message), '#skip'))
+      - name: Rollback
+        run: cd backend && flyctl deploy -i `flyctl releases -j | jq ".[1].ImageRef" -r` --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        if: failure() && (steps.deploy.outcome == 'failure')
+      - name: Send Discord Notification
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{secrets.DISCORD_WEBHOOK}}
+  tag_release:
+    needs: [lint_test_and_deploy]
     runs-on: ubuntu-20.04
     steps:
-      - run: "cd frontend"
-      - run: npm install
-
-  backend_dependencies:
-    needs: [checkout_and_node]
-    runs-on: ubuntu-20.04
-    steps:
-      - run: cd backend
-      - run: npm install
-
-  root_dependencies:
-    needs: [checkout_and_node]
-    runs-on: ubuntu-20.04
-    steps:
-      - run: npm install
-
-  lint:
-    needs: [frontend_dependenceis, backend_dependencies, root_dependencies]
-    runs-on: ubuntu-20.04
-    steps:
-      - run: npm run lint
+      - uses: actions/checkout@v3
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.66.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+        if: (github.event_name == 'push') && !(contains(join(github.event.commits.*.message), '#skip'))
