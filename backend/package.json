@@ -12,6 +12,7 @@
     "mongoose-unique-validator": "^4.0.0"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.2.14",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.2.1",
@@ -25,7 +26,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --runInBand --verbose",
     "dev": "cross-env NODE_ENV=dev nodemon index.js",
-    "prod": "cross-env NODE_ENV=prod node index.js",
+    "start": "node index.js",
     "e2e": "cross-env NODE_ENV=e2etest node index.js"
   },
   "author": "Jack Porter",
