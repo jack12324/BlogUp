@@ -24,6 +24,7 @@ function BlogForm({ onClose }) {
   const title = useRequiredField("text", "title");
   const url = useUrlField("url");
   const [error, setError] = useState("");
+  const [addingBlog, setAddingBlog] = useState(false);
 
   const dispatch = useDispatch();
   const user = useSelector((state) => state.currentUser);
@@ -44,6 +45,7 @@ function BlogForm({ onClose }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (validateFields()) {
+      setAddingBlog(true);
       const err = await dispatch(
         createBlog(
           {
@@ -54,6 +56,7 @@ function BlogForm({ onClose }) {
           user
         )
       );
+      setAddingBlog(false);
       if (!err) {
         resetFields();
         onClose();
@@ -85,6 +88,7 @@ function BlogForm({ onClose }) {
       </ModalBody>
       <ModalFooter>
         <Button
+          isLoading={addingBlog}
           id="blog-form-submit-button"
           colorScheme="green"
           bgColor="green.300"

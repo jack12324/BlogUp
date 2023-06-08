@@ -3,7 +3,7 @@ require("dotenv").config();
 const { PORT } = process.env;
 
 const MONGODB_URI =
-  process.env.NODE_ENV === "test" || process.env.NODE_ENV === "e2etest"
+  process.env.NODE_ENV !== "production"
     ? process.env.TEST_MONGODB_URI
     : process.env.MONGODB_URI;
 
