@@ -43,7 +43,7 @@ jobs:
           PORT: 3001
       - name: Deploy
         id: deploy
-        run: npm run deploy
+        run: cd backend && flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{secrets.FLY_API_TOKEN}}
         if: (github.event_name == 'push') && !(contains(join(github.event.commits.*.message), '#skip'))
