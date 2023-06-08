@@ -9,6 +9,7 @@ Start using BlogUp at [blogup.fly.dev](https://blogup.fly.dev)
 - Users are able to delete blogs which they have added
 - Blogs are displayed on the home page in order of the likes they have received
 - Only authenticated users may like, create, or delete blogs
+- Dark mode supported
 
 
 ## Technical Details
