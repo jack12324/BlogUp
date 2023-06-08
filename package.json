@@ -4,17 +4,21 @@
   "description": "",
   "scripts": {
     "dev": "concurrently \"cd backend && npm run backend:dev\" \"cd frontend && npm run start\"",
-    "dev:e2e": "(concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\") && (cd frontend npm run e2e)",
+    "dev:e2e": "concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\" \"wait-on http://localhost:3001 && cd frontend && npm run e2e:dev\"",
     "lint": "eslint .",
     "test:backend": "cd backend && npm run test",
-    "test:e2e": "cd frontend && npm run e2e"
+    "prod:e2e":  "cd backend && npm run e2e",
+    "test:e2e": "cd frontend && npm run e2e:static",
+    "build": "cd frontend && rm -rf build && npm run build && cd ../backend && rm -rf build && cp -r ../frontend/build .",
+    "deploy": "cd backend && fly deploy --remote-only"
   },
   "author": "Jack Porter",
   "license": "ISC",
   "devDependencies": {
+    "concurrently": "^8.1.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^8.8.0",
     "prettier": "^2.8.8",
-    "concurrently": "^8.1.0"
+    "wait-on": "^7.0.1"
   }
 }

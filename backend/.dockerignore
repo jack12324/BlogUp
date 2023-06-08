@@ -1,4 +1,11 @@
-build
 node_modules
 .env
 .idea
+.dockerignore
+.eslintignore
+.eslintrc.js
+.gitignore
+.rest
+Dockerfile
+fly.toml
+tests
