@@ -31,7 +31,9 @@ const limiter = rateLimiter({
   max: 120,
 });
 
-app.use(limiter);
+if (process.env.NODE_ENV === "production") {
+  app.use(limiter);
+}
 
 app.use(express.static("build"));
 
