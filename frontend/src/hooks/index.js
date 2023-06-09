@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useBreakpointValue } from "@chakra-ui/react";
 
 export const useField = (type, initialValue = "") => {
   const [value, setValue] = useState(initialValue);
@@ -69,3 +70,9 @@ export const useUrlField = (name) => {
     input,
   };
 };
+
+// useBreakpoint loads base by default, which causes a flicker when loading. Since we aren't
+// using server side rendering, we can turn off ssr here, which will stop the flicker from
+// happening
+export const useCsrBreakpointValue = (values, arg) =>
+  useBreakpointValue(values, { ...arg, ssr: false });

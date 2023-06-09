@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run start\"",
     "dev:e2e": "concurrently \"cd backend && npm run e2e\" \"cd frontend && npm start\" \"wait-on http://localhost:3001 && cd frontend && npm run e2e:dev\"",
+    "dev:static": "npm run build && cd backend && npm run dev",
     "lint": "eslint .",
     "test:backend": "cd backend && npm run test",
     "prod:e2e":  "cd backend && npm run e2e",

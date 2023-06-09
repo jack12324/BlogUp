@@ -1,18 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
-import {
-  Button,
-  HStack,
-  Text,
-  useBreakpointValue,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Button, HStack, Text, useDisclosure } from "@chakra-ui/react";
 import { logout } from "../reducer/currentUserReducer";
 import LoginModal from "./LoginModal";
+import { useCsrBreakpointValue } from "../hooks";
 
 function CurrentUser() {
   const user = useSelector((state) => state.currentUser);
   const dispatch = useDispatch();
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isMobile = useCsrBreakpointValue({ base: true, md: false });
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const onLogout = () => {

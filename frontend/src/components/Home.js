@@ -1,14 +1,14 @@
-import { useBreakpointValue } from "@chakra-ui/react";
 import { useSelector } from "react-redux";
 import BlogsHeading from "./BlogsHeading";
 import BlogGrid from "./BlogGrid";
+import { useCsrBreakpointValue } from "../hooks";
 
 function Home() {
   const blogs = useSelector((state) =>
     [...state.blogs].sort((a, b) => b.likes - a.likes)
   );
 
-  const isBase = useBreakpointValue({ base: true, sm: false });
+  const isBase = useCsrBreakpointValue({ base: true, sm: false });
   return (
     <section>
       {isBase ? null : (

@@ -2,6 +2,8 @@ const express = require("express");
 require("express-async-errors");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path");
+const rateLimiter = require("express-rate-limit");
 const middleware = require("./utils/middleware");
 const logger = require("./utils/logger");
 const blogsRouter = require("./controllers/blogs");
@@ -24,6 +26,15 @@ mongoose
     logger.error("error connecting to MongoDB", error.message);
   });
 
+const limiter = rateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120,
+});
+
+if (process.env.NODE_ENV === "production") {
+  app.use(limiter);
+}
+
 app.use(express.static("build"));
 
 app.use(cors());
@@ -35,11 +46,15 @@ app.use("/api/blogs", middleware.userExtractor, blogsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/login", loginRouter);
 
-if (process.env.NODE_ENV === "e2etest") {
+if (process.env.NODE_ENV !== "production") {
   // eslint-disable-next-line global-require
   const testingRouter = require("./controllers/testing");
   app.use("/api/testing", testingRouter);
 }
+
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

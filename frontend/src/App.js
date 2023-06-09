@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Route, Navigate, Routes } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Route, Routes } from "react-router-dom";
 import { Box, Container, useTheme } from "@chakra-ui/react";
 import { initializeBlogs } from "./reducer/blogReducer";
 import { initializeCurrentUser } from "./reducer/currentUserReducer";
@@ -11,7 +11,6 @@ import MyBlogs from "./components/MyBlogs";
 
 function App() {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.currentUser);
   const theme = useTheme();
 
   useEffect(() => {
@@ -26,13 +25,6 @@ function App() {
     dispatch(initializeUsers());
   }, []);
 
-  const requireLogin = (element) => {
-    if (user) {
-      return element;
-    }
-    return <Navigate replace to="/" />;
-  };
-
   return (
     <Box
       as="section"
@@ -44,8 +36,7 @@ function App() {
       <Container w={{ xl: theme.breakpoints.xl }} maxW="100%">
         <NavBar />
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/myblogs" element={requireLogin(<MyBlogs />)} />
+          <Route path="/myblogs" element={<MyBlogs />} />
           <Route path="/*" element={<Home />} />
         </Routes>
       </Container>
