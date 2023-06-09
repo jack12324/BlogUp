@@ -28,7 +28,7 @@ mongoose
 
 const limiter = rateLimiter({
   windowMs: 60 * 1000, // 1 minute
-  max: 500,
+  max: 120,
 });
 
 app.use(limiter);
