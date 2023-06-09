@@ -3,6 +3,7 @@ require("express-async-errors");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
+const rateLimiter = require("express-rate-limit");
 const middleware = require("./utils/middleware");
 const logger = require("./utils/logger");
 const blogsRouter = require("./controllers/blogs");
@@ -24,6 +25,13 @@ mongoose
   .catch((error) => {
     logger.error("error connecting to MongoDB", error.message);
   });
+
+const limiter = rateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 500,
+});
+
+app.use(limiter);
 
 app.use(express.static("build"));
 
