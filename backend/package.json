@@ -27,7 +27,7 @@
     "test": "cross-env NODE_ENV=test jest --runInBand --verbose",
     "dev": "cross-env NODE_ENV=dev nodemon index.js",
     "start": "node index.js",
-    "e2e": "cross-env NODE_ENV=e2etest node index.js"
+    "e2e": "cross-env NODE_ENV=test node index.js"
   },
   "author": "Jack Porter",
   "license": "ISC",
